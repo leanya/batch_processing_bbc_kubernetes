@@ -55,24 +55,17 @@ jobs:
     - name: Set up Helm
       uses: azure/setup-helm@v4.3.0
       with:
-        version: 'latest'
-
-    - name: Prepare Helm registry config directory
-      run: mkdir -p ~/.config/helm/registry
+        version: '3.17.3'
 
     - name: Log into Docker Hub (for Helm OCI)
       run: |
         echo $DOCKER_PASSWORD | helm registry login registry-1.docker.io -u $DOCKER_USER --password-stdin
-        helm version
-        cat ~/.config/helm/registry/config.json || echo "Registry config not found"
-        helm env | grep HELM_REGISTRY_CONFIG
-        curl -v https://registry-1.docker.io/v2/lean24/helm-charts/tags/list
-
+        sed -i 's|registry-1.docker.io|https://index.docker.io/v1/|g' ~/.config/helm/registry/config.json
 
     - name: Package and Push Chart
       run: |
         helm package ./helm-charts
-        helm push bbc-news-app-*.tgz oci://registry-1.docker.io/${{ secrets.DOCKERHUB_USERNAME }}/helm-charts/ --debug
+        helm push bbc-news-app-*.tgz oci://registry-1.docker.io/${{ secrets.DOCKERHUB_USERNAME }}/helm-charts --debug
 
   # deployment:
   #   name: 'Deployment_ec2'
