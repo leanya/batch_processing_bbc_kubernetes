@@ -1,0 +1,26 @@
+replicaCount: 1
+
+backend:
+  repository: "lean24/bbc_backend"
+  tag: "kubernetes"
+  pullPolicy: Always
+  schedule: "*/8 * * * *"
+
+frontend:
+  repository: "lean24/bbc_frontend"
+  tag: "kubernetes"
+  pullPolicy: Always
+
+postgres:
+  image: "postgres"
+  tag: 14
+
+service_postgres:
+  port: 5432
+  targetport: 5432
+
+service_frontend:
+  port: 8501
+  targetport: 8501
+  nodeport: 30501
+  type: "NodePort"

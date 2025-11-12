@@ -1,0 +1,92 @@
+name: 'deployment_pipeline'
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'README.md'
+
+jobs:
+  # terraform:
+  #   name: 'Terraform'
+  #   runs-on: ubuntu-latest
+
+  docker: 
+    name: 'Docker'
+    runs-on: ubuntu-latest
+    env:
+      DOCKER_USER: ${{secrets.DOCKER_USER}}
+      DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
+    strategy:
+      matrix:
+        service: [backend, frontend]
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v4
+
+    - name: Log into Docker Hub
+      uses: docker/login-action@v3
+      with: 
+        username: ${{secrets.DOCKER_USER}}
+        password: ${{secrets.DOCKER_PASSWORD}}
+
+    - name: Build and push ${{ matrix.service }} images 
+      uses: docker/build-push-action@v6
+      with:
+        context: ./deployment_batch/${{ matrix.service }}
+        file: ./deployment_batch/${{ matrix.service }}/Dockerfile
+        push: true
+        tags: |
+          lean24/bbc_${{ matrix.service }}:kubernetes
+
+  helm: 
+    name: 'Helm'
+    runs-on: ubuntu-latest
+    needs: docker
+    env:
+      DOCKER_USER: ${{secrets.DOCKER_USER}}
+      DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
+
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v4
+
+    - name: Set up Helm
+      uses: azure/setup-helm@v4.3.0
+      with:
+        version: 'latest'
+
+    - name: Log into Docker Hub (for Helm OCI)
+      run: |
+        echo $DOCKER_PASSWORD | helm registry login registry-1.docker.io -u $DOCKER_USER --password-stdin
+
+    - name: Package and Push Chart
+      run: |
+        helm package ./helm-charts
+        helm push bbc-news-app-*.tgz oci://docker.io/${{ secrets.DOCKERHUB_USERNAME }}/helm-charts
+
+  # deployment:
+  #   name: 'Deployment_ec2'
+  #   runs-on: ubuntu-latest
+  #   needs: helm
+  #   env:
+  #     DOCKER_USER: ${{secrets.DOCKER_USER}}
+
+  #   steps:
+  #   - name: Checkout repo
+  #     uses: actions/checkout@v4
+    
+  #   - name: Set up Helm
+  #     uses: azure/setup-helm@v4.3.0
+  #     with:
+  #       version: 'latest'
+    
+  #   - name: Configure kubectl
+  #     run: |
+  #       mkdir -p ~/.kube
+  #       echo "$KUBECONFIG_DATA" > ~/.kube/config
+
+  #   - name: Pull the helm chart from repo
+  #     run: |
+  #       helm upgrade --install bbc-deploy oci://docker.io/${{ secrets.DOCKERHUB_USERNAME }}/helm-charts/bbc-news-app --version <new-version>

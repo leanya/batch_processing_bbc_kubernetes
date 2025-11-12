@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: "{{ .Release.Name }}-deploy-frontend"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: "{{ .Release.Name }}-deploy-frontend"
+  template:
+    metadata:
+      labels:
+        app: "{{ .Release.Name }}-deploy-frontend"
+    spec:
+      initContainers:
+        - name: run-backend-initial
+          image: "{{ .Values.backend.repository }}:{{ .Values.backend.tag }}"
+          command: ["python", "/app/data_prep_dag.py"]
+          envFrom:
+            - configMapRef:
+                name: postgres-credential
+          env:
+            - name: DB_HOST
+              value: "{{ .Release.Name }}-service-postgres"
+            - name: DB_PORT
+              value: {{ .Values.service_postgres.port | quote }}
+      containers:
+        - name: frontend
+          image: "{{ .Values.frontend.repository }}:{{ .Values.frontend.tag }}"
+          imagePullPolicy: {{ .Values.frontend.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service_frontend.port }}
+          envFrom:
+            - configMapRef:
+                name: postgres-credential
+          env:
+            - name: DB_HOST
+              value: "{{ .Release.Name }}-service-postgres"
+            - name: DB_PORT
+              value: {{ .Values.service_postgres.port | quote }}
+      
