@@ -62,6 +62,9 @@ jobs:
         echo $DOCKER_PASSWORD | helm registry login registry-1.docker.io -u $DOCKER_USER --password-stdin
         helm version
         helm env | grep HELM_REGISTRY_CONFIG
+    
+    - name: Show Helm registry config
+      run: cat $HOME/.config/helm/registry/config.json
 
     - name: Package and Push Chart
       run: |
