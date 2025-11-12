@@ -69,7 +69,7 @@ jobs:
     - name: Package and Push Chart
       run: |
         helm package ./helm-charts
-        helm push bbc-news-app-*.tgz oci://registry-1.docker.io/lean24/helm-charts 
+        ./helm/bin/helm push bbc-news-app-*.tgz oci://registry-1.docker.io/lean24/helm-charts 
 
   # deployment:
   #   name: 'Deployment_ec2'
