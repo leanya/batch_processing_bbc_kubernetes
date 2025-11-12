@@ -64,7 +64,7 @@ jobs:
     - name: Package and Push Chart
       run: |
         helm package ./helm-charts
-        helm push bbc-news-app-*.tgz oci://docker.io/${{ secrets.DOCKERHUB_USERNAME }}/helm-charts
+        helm push bbc-news-app-*.tgz oci://registry-1.docker.io/${{ secrets.DOCKERHUB_USERNAME }}/helm-charts
 
   # deployment:
   #   name: 'Deployment_ec2'
