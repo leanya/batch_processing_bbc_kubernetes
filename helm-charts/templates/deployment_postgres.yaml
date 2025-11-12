@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: "{{ .Release.Name }}-deploy-postgres"
+  name: "{{ .Release.Name }}-deploy-postgres"
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: "{{ .Release.Name }}-deploy-postgres"
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: "{{ .Release.Name }}-deploy-postgres"
+    spec:
+      volumes:
+        - name: dbdata
+          hostPath:
+            path: /data/postgres  
+            type: DirectoryOrCreate
+      containers:
+      - image: "{{ .Values.postgres.image }}:{{ .Values.postgres.tag }}"
+        name: postgres
+        ports:
+          - containerPort: {{ .Values.service_postgres.port }}
+        envFrom:
+          - configMapRef:
+              name: postgres-credential
+        volumeMounts:
+          - name: dbdata
+            mountPath: /var/lib/postgresql/data

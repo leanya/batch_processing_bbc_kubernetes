@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: "{{ .Release.Name }}-deploy-frontend"
+  name: "{{ .Release.Name }}-service-frontend"
+spec:
+  type: NodePort
+  ports:
+    - port: {{ .Values.service_frontend.port }}
+      protocol: TCP
+      targetPort: {{ .Values.service_frontend.targetport }}
+      nodePort: {{ .Values.service_frontend.nodeport }}
+  selector:
+    app: "{{ .Release.Name }}-deploy-frontend"

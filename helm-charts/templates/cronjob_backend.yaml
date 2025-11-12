@@ -1,0 +1,24 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: "{{ .Release.Name }}-cronjob-backend"
+spec:
+  schedule: "{{ .Values.backend.schedule }}"
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: backend
+            image: "{{ .Values.backend.repository }}:{{ .Values.backend.tag }}"
+            envFrom:
+              - configMapRef:
+                  name: postgres-credential            
+            env:
+              - name: DB_HOST
+                value: "{{ .Release.Name }}-service-postgres"
+              - name: DB_PORT
+                value: {{ .Values.service_postgres.port | quote }}
+          restartPolicy: OnFailure
