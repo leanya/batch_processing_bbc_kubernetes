@@ -60,7 +60,8 @@ jobs:
     - name: Log into Docker Hub (for Helm OCI)
       run: |
         echo $DOCKER_PASSWORD | helm registry login registry-1.docker.io -u $DOCKER_USER --password-stdin
-        sed -i 's|registry-1.docker.io|https://index.docker.io/v1/|g' ~/.config/helm/registry/config.json
+        helm version
+        helm env | grep HELM_REGISTRY_CONFIG
 
     - name: Package and Push Chart
       run: |
