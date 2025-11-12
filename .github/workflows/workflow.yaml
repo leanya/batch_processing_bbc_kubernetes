@@ -60,11 +60,16 @@ jobs:
     - name: Log into Docker Hub (for Helm OCI)
       run: |
         echo $DOCKER_PASSWORD | helm registry login registry-1.docker.io -u $DOCKER_USER --password-stdin
+        helm version
+        cat ~/.config/helm/registry.json | jq
+        helm env | grep HELM_REGISTRY_CONFIG
+        curl -v https://registry-1.docker.io/v2/lean24/helm-charts/tags/list
+
 
     - name: Package and Push Chart
       run: |
         helm package ./helm-charts
-        helm push bbc-news-app-*.tgz oci://registry-1.docker.io/${{ secrets.DOCKERHUB_USERNAME }}/helm-charts/
+        helm push bbc-news-app-*.tgz oci://registry-1.docker.io/${{ secrets.DOCKERHUB_USERNAME }}/helm-charts/ --debug
 
   # deployment:
   #   name: 'Deployment_ec2'
