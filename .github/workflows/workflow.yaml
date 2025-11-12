@@ -57,11 +57,14 @@ jobs:
       with:
         version: 'latest'
 
+    - name: Prepare Helm registry config directory
+      run: mkdir -p ~/.config/helm/registry
+
     - name: Log into Docker Hub (for Helm OCI)
       run: |
         echo $DOCKER_PASSWORD | helm registry login registry-1.docker.io -u $DOCKER_USER --password-stdin
         helm version
-        cat ~/.config/helm/registry.json | jq
+        cat ~/.config/helm/registry/config.json || echo "Registry config not found"
         helm env | grep HELM_REGISTRY_CONFIG
         curl -v https://registry-1.docker.io/v2/lean24/helm-charts/tags/list
 
