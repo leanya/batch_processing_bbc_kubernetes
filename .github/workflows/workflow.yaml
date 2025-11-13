@@ -5,6 +5,9 @@ on:
       - main
     paths-ignore:
       - 'README.md'
+permissions:
+  contents: read
+  packages: write 
 
 jobs:
   # terraform:
@@ -45,8 +48,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: docker
     env:
-      DOCKER_USER: ${{secrets.DOCKER_USER}}
-      DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
+      REGISTRY: ghcr.io
+      OWNER: ${{ github.repository_owner }}
+      CHART_NAME: bbc-news-app
 
     steps:
     - name: Checkout repo
@@ -57,19 +61,14 @@ jobs:
       with:
         version: '3.17.3'
 
-    - name: Log into Docker Hub (for Helm OCI)
+    - name: Helm login to GitHub Container Registry
       run: |
-        echo $DOCKER_PASSWORD | helm registry login registry-1.docker.io -u $DOCKER_USER --password-stdin
-        helm version
-        helm env | grep HELM_REGISTRY_CONFIG
-    
-    - name: Show Helm registry config
-      run: cat $HOME/.config/helm/registry/config.json
+        echo ${{ secrets.GITHUB_TOKEN }} | helm registry login $REGISTRY -u $OWNER --password-stdin
 
     - name: Package and Push Chart
       run: |
         helm package ./helm-charts
-        ./helm/bin/helm push bbc-news-app-*.tgz oci://registry-1.docker.io/lean24/helm-charts 
+        helm push ${CHART_NAME}-*.tgz oci://$REGISTRY/$OWNER/bbc-app-charts 
 
   # deployment:
   #   name: 'Deployment_ec2'
