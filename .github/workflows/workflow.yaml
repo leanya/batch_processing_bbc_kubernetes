@@ -58,7 +58,8 @@ jobs:
         echo "instance_public_dns=$(terraform output -raw instance_public_ip)" >> $GITHUB_OUTPUT
       working-directory: ./aws_cloud
 
-  docker: 
+  docker:
+    if: false 
     name: 'Docker'
     runs-on: ubuntu-latest
     env:
@@ -88,6 +89,7 @@ jobs:
           lean24/bbc_${{ matrix.service }}:kubernetes
 
   helm: 
+    if: false
     name: 'Helm'
     runs-on: ubuntu-latest
     needs: docker
