@@ -140,6 +140,8 @@ jobs:
       OWNER: ${{ github.repository_owner }}
       CHART_NAME: bbc-news-app
       SSH_PRIVATE_KEY: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
+      # EC2_IP: ${{ needs.terraform.outputs.instance_public_dns }}
+      EC2_IP: ${{ github.event.inputs.ec2_ip }} 
 
     steps:
     - name: Checkout repo
@@ -155,13 +157,13 @@ jobs:
         mkdir -p ~/.ssh
         echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
         chmod 600 ~/.ssh/id_rsa
-        ssh-keyscan -H ${{ needs.terraform.outputs.instance_public_dns }} >> ~/.ssh/known_hosts
+        ssh-keyscan -H $EC2_IP >> ~/.ssh/known_hosts
 
     - name: Copy and set kubeconfig in runner
       run: | 
         echo "$(date) - Attempting SCP"
-        scp -o StrictHostKeyChecking=no ec2-user@${{ needs.terraform.outputs.instance_public_dns }}:/etc/rancher/k3s/k3s.yaml ./k3s.yaml
-        sed -i "s/127.0.0.1/${{ needs.terraform.outputs.instance_public_dns }}/" ./k3s.yaml
+        scp -o StrictHostKeyChecking=no ec2-user@$EC2_IP:/etc/rancher/k3s/k3s.yaml ./k3s.yaml
+        sed -i "s/127.0.0.1/$EC2_IP/" ./k3s.yaml
         export KUBECONFIG=$(pwd)/k3s.yaml
 
     - name: Helm login to GitHub Container Registry
