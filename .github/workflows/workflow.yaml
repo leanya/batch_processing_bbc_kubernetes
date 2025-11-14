@@ -185,8 +185,11 @@ jobs:
 
     - name: Helm login to GitHub Container Registry
       run: |
+        helm version 
+        export HELM_EXPERIMENTAL_OCI=1
         echo ${{ secrets.GITHUB_TOKEN }} | helm registry login $REGISTRY -u $OWNER --password-stdin
 
     - name: Install the helm chart 
       run: |
+        export HELM_EXPERIMENTAL_OCI=1
         helm --kubeconfig=$(pwd)/k3s.yaml --insecure-skip-tls-verify upgrade --install bbc-deploy oci://$REGISTRY/$OWNER/bbc-app-charts/$CHART_NAME
