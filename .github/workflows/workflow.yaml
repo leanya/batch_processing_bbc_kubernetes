@@ -10,9 +10,53 @@ permissions:
   packages: write 
 
 jobs:
-  # terraform:
-  #   name: 'Terraform'
-  #   runs-on: ubuntu-latest
+  terraform:
+    name: 'Terraform'
+    runs-on: ubuntu-latest
+    outputs:
+      instance_public_dns: ${{steps.set_dns.outputs.instance_public_dns}}
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_REGION: ap-southeast-1
+
+    steps:
+    - name: Checkout repo 
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{env.AWS_REGION}}
+    
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_wrapper: false
+        terraform_version: 1.10.0
+
+    - name: Terraform Init
+      id: terraform_init
+      run: terraform init
+      working-directory: ./aws_cloud
+    
+    - name: Terraform Plan
+      id: terraform_plan
+      run: terraform plan
+      working-directory: ./aws_cloud
+    
+    - name: Terraform Apply
+      id: terraform_apply
+      run: terraform apply -auto-approve
+      working-directory: ./aws_cloud
+
+    - name: Set output
+      id: set_dns
+      run: |-
+        echo "instance_public_dns=$(terraform output -raw instance_public_ip)" >> $GITHUB_OUTPUT
+      working-directory: ./aws_cloud
 
   docker: 
     name: 'Docker'
@@ -70,27 +114,42 @@ jobs:
         helm package ./helm-charts
         helm push ${CHART_NAME}-*.tgz oci://$REGISTRY/$OWNER/bbc-app-charts 
 
-  # deployment:
-  #   name: 'Deployment_ec2'
-  #   runs-on: ubuntu-latest
-  #   needs: helm
-  #   env:
-  #     DOCKER_USER: ${{secrets.DOCKER_USER}}
+  deployment:
+    name: 'Deploy to EC2 k3s'
+    runs-on: ubuntu-latest
+    needs: [terraform, helm]
+    env:
+      REGISTRY: ghcr.io
+      OWNER: ${{ github.repository_owner }}
+      CHART_NAME: bbc-news-app
+      SSH_PRIVATE_KEY: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
 
-  #   steps:
-  #   - name: Checkout repo
-  #     uses: actions/checkout@v4
+    steps:
+    - name: Checkout repo
+      uses: actions/checkout@v4
     
-  #   - name: Set up Helm
-  #     uses: azure/setup-helm@v4.3.0
-  #     with:
-  #       version: 'latest'
+    - name: Set up Helm
+      uses: azure/setup-helm@v4.3.0
+      with:
+        version: '3.17.3'
     
-  #   - name: Configure kubectl
-  #     run: |
-  #       mkdir -p ~/.kube
-  #       echo "$KUBECONFIG_DATA" > ~/.kube/config
+    - name: Configure SSH for runner
+      run: |
+        mkdir -p ~/.ssh
+        echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
+        ssh-keyscan -H ${{ needs.terraform.outputs.instance_public_dns }} >> ~/.ssh/known_hosts
 
-  #   - name: Pull the helm chart from repo
-  #     run: |
-  #       helm upgrade --install bbc-deploy oci://docker.io/${{ secrets.DOCKERHUB_USERNAME }}/helm-charts/bbc-news-app --version <new-version>
+    - name: Copy and set kubeconfig in runner
+      run: | 
+        scp -o StrictHostKeyChecking=no ec2-user@${{ needs.terraform.outputs.instance_public_dns }}:/etc/rancher/k3s/k3s.yaml ./k3s.yaml
+        sed -i "s/127.0.0.1/${{ needs.terraform.outputs.instance_public_dns }}/" ./k3s.yaml
+        export KUBECONFIG=$(pwd)/k3s.yaml
+
+    - name: Helm login to GitHub Container Registry
+      run: |
+        echo ${{ secrets.GITHUB_TOKEN }} | helm registry login $REGISTRY -u $OWNER --password-stdin
+
+    - name: Install the helm chart 
+      run: |
+        helm upgrade --install bbc-deploy oci://$REGISTRY/$OWNER/bbc-app-charts/$CHART_NAME
