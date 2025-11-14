@@ -11,6 +11,11 @@ on:
       ec2_ip:
         description: 'EC2 public IP for testing'
         required: true
+      debug:
+        description: 'Enable tmate session for debugging'
+        required: false
+        default: 'false'
+
 permissions:
   contents: read
   packages: write 
@@ -165,6 +170,19 @@ jobs:
         scp -o StrictHostKeyChecking=no ec2-user@$EC2_IP:/etc/rancher/k3s/k3s.yaml ./k3s.yaml
         sed -i "s/127.0.0.1/$EC2_IP/" ./k3s.yaml
         export KUBECONFIG=$(pwd)/k3s.yaml
+        
+    - name: Debug via tmate
+      if: ${{ github.event.inputs.debug == 'true' }}
+      uses: mxschmitt/action-tmate@v3
+    
+    - name: Check the kubeconfig in runner
+      run: | 
+        ls -l ./k3s.yaml
+        cat ./k3s.yaml | head -n 10
+        echo $KUBECONFIG
+        cat $KUBECONFIG | head -n 5
+        kubectl --kubeconfig=$KUBECONFIG get nodes -v=8
+        curl -vk https://$EC2_IP:6443
 
     - name: Helm login to GitHub Container Registry
       run: |
