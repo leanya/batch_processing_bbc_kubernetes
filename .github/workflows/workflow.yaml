@@ -145,6 +145,7 @@ jobs:
 
     - name: Copy and set kubeconfig in runner
       run: | 
+        echo "$(date) - Attempting SCP"
         scp -o StrictHostKeyChecking=no ec2-user@${{ needs.terraform.outputs.instance_public_dns }}:/etc/rancher/k3s/k3s.yaml ./k3s.yaml
         sed -i "s/127.0.0.1/${{ needs.terraform.outputs.instance_public_dns }}/" ./k3s.yaml
         export KUBECONFIG=$(pwd)/k3s.yaml

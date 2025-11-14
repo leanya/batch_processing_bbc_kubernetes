@@ -1,5 +1,8 @@
 #!/bin/bash
 set -ex
+
+echo "$(date) - INIT SCRIPT START" | sudo tee /var/log/init_script.log
+
 sudo yum update -y
 sudo yum install git -y
 
@@ -24,3 +27,9 @@ if ! sudo systemctl is-active --quiet k3s; then
   echo "ERROR: k3s did not start within expected time"
   exit 1
 fi
+
+# update kubeconfig permissions
+sudo chmod 644 /etc/rancher/k3s/k3s.yaml
+sudo chown ec2-user:ec2-user /etc/rancher/k3s/k3s.yaml
+
+echo "$(date) - INIT SCRIPT COMPLETE, k3s is ready" | sudo tee -a /var/log/init_script.log
