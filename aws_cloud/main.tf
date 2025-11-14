@@ -33,6 +33,21 @@ resource "aws_instance" "myec2_tf" {
     Name = "terraform_ec2"
   }
 
+  # provisioner to wait for k3s in the init-script
+  provisioner "remote-exec" {
+    inline = [
+      "echo 'Waiting for k3s to be ready...'",
+      "while [ ! -f /var/run/k3s-ready ]; do sleep 5; done",
+      "echo 'k3s is ready, init script complete.'"
+    ]
+
+    connection {
+      type        = "ssh"
+      host        = self.public_ip
+      user        = "ec2-user"
+      private_key = file("~/.ssh/id_rsa")  # can use GitHub secret
+    }
+  }
 }
 
 output "instance_public_ip" {
