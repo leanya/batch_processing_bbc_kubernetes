@@ -19,6 +19,7 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       AWS_REGION: ap-southeast-1
+      SSH_PRIVATE_KEY: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
 
     steps:
     - name: Checkout repo 
@@ -41,6 +42,12 @@ jobs:
       id: terraform_init
       run: terraform init
       working-directory: ./aws_cloud
+
+    - name: Configure SSH for runner
+      run: |
+        mkdir -p ~/.ssh
+        echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+        chmod 600 ~/.ssh/id_rsa
     
     - name: Terraform Plan
       id: terraform_plan

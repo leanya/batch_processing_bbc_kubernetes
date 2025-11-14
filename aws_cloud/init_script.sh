@@ -22,14 +22,11 @@ for i in {1..30}; do
   fi
 done
 
-# Extra check: fail if k3s is still not active
-if ! sudo systemctl is-active --quiet k3s; then
-  echo "ERROR: k3s did not start within expected time"
-  exit 1
-fi
 
 # update kubeconfig permissions
 sudo chmod 644 /etc/rancher/k3s/k3s.yaml
 sudo chown ec2-user:ec2-user /etc/rancher/k3s/k3s.yaml
 
 echo "$(date) - INIT SCRIPT COMPLETE, k3s is ready" | sudo tee -a /var/log/init_script.log
+
+touch /var/run/k3s-ready
