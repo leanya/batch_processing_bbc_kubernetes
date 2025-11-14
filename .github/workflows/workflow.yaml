@@ -119,7 +119,8 @@ jobs:
   deployment:
     name: 'Deploy to EC2 k3s'
     runs-on: ubuntu-latest
-    needs: [terraform, helm]
+    # needs: [terraform, helm]
+    needs: terraform
     env:
       REGISTRY: ghcr.io
       OWNER: ${{ github.repository_owner }}
