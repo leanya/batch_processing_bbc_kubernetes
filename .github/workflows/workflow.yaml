@@ -180,7 +180,7 @@ jobs:
         cat ./k3s.yaml | head -n 10
         echo $KUBECONFIG
         cat $KUBECONFIG | head -n 5
-        kubectl --kubeconfig=$(pwd)/k3s.yaml get nodes -v=8
+        kubectl --kubeconfig=$(pwd)/k3s.yaml --insecure-skip-tls-verify get nodes -v=8
         curl -vk https://$EC2_IP:6443
 
     - name: Helm login to GitHub Container Registry
@@ -189,4 +189,4 @@ jobs:
 
     - name: Install the helm chart 
       run: |
-        helm --kubeconfig=$(pwd)/k3s.yaml upgrade --install bbc-deploy oci://$REGISTRY/$OWNER/bbc-app-charts/$CHART_NAME
+        helm --kubeconfig=$(pwd)/k3s.yaml --insecure-skip-tls-verify upgrade --install bbc-deploy oci://$REGISTRY/$OWNER/bbc-app-charts/$CHART_NAME
