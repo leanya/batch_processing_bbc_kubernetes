@@ -1,7 +1,7 @@
 #!/bin/bash
 set -ex
 sudo yum update -y
-sudo yum install curl wget git -y
+sudo yum install git -y
 
 sudo swapoff -a
 sudo sed -i '/swap/d' /etc/fstab
