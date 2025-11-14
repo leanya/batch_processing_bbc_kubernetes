@@ -182,6 +182,12 @@ jobs:
         cat $KUBECONFIG | head -n 5
         kubectl --kubeconfig=$(pwd)/k3s.yaml --insecure-skip-tls-verify get nodes -v=8
         curl -vk https://$EC2_IP:6443
+        
+    - name: Debug helm binary
+      run: |
+        which helm
+        helm version
+        ls -l $(which helm)
 
     - name: Helm login to GitHub Container Registry
       run: |
