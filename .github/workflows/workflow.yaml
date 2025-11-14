@@ -1,16 +1,23 @@
 name: 'deployment_pipeline'
+# on:
+#   push:
+#     branches:
+#       - main
+#     paths-ignore:
+#       - 'README.md'
 on:
-  push:
-    branches:
-      - main
-    paths-ignore:
-      - 'README.md'
+  workflow_dispatch:
+    inputs:
+      ec2_ip:
+        description: 'EC2 public IP for testing'
+        required: true
 permissions:
   contents: read
   packages: write 
 
 jobs:
   terraform:
+    if: false
     name: 'Terraform'
     runs-on: ubuntu-latest
     outputs:
@@ -127,7 +134,7 @@ jobs:
     name: 'Deploy to EC2 k3s'
     runs-on: ubuntu-latest
     # needs: [terraform, helm]
-    needs: terraform
+    # needs: terraform
     env:
       REGISTRY: ghcr.io
       OWNER: ${{ github.repository_owner }}
