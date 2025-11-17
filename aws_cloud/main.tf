@@ -36,15 +36,14 @@ resource "aws_instance" "myec2_tf" {
   # provisioner to install and wait for k3s in the init-script
   provisioner "remote-exec" {
     inline = [
-      "sudo swapoff -a",
-      "sudo sed -i '/swap/d' /etc/fstab",
-      "PUBLIC_IP=${self.public_ip}",
-      "echo PUBLIC_IP=$PUBLIC_IP",
-      "sudo curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION='v1.28.6+k3s1' INSTALL_K3S_EXEC='--disable=traefik --tls-san $PUBLIC_IP' sh -",
-      "while [ ! sudo systemctl is-active --quiet k3s ]; do sleep 5; done",
       "echo 'Waiting for k3s to be ready...'",
-      "sudo chmod 644 /etc/rancher/k3s/k3s.yaml",
-      "sudo chown ec2-user:ec2-user /etc/rancher/k3s/k3s.yaml",
+      "while [ ! -f /var/run/k3s-ready ]; do sleep 5; done",
+      "echo 'k3s is ready, init script complete.'",
+      "sudo mkdir -p /etc/rancher/k3s",
+      "PUBLIC_IP=${self.public_ip}",
+      "sudo sh -c 'echo \"tls-san:\\n  - $PUBLIC_IP\" > /etc/rancher/k3s/config.yaml'",
+      "sudo systemctl restart k3s",
+      "sudo systemctl status k3s"
     ]
 
     connection {
