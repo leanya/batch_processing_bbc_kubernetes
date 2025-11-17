@@ -38,7 +38,7 @@ resource "aws_instance" "myec2_tf" {
     inline = [
       "sudo swapoff -a",
       "sudo sed -i '/swap/d' /etc/fstab",
-      "PUBLIC_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)",
+      "PUBLIC_IP=${self.public_ip}",
       "echo PUBLIC_IP=$PUBLIC_IP",
       "sudo curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION='v1.28.6+k3s1' INSTALL_K3S_EXEC='--disable=traefik --tls-san $PUBLIC_IP' sh -",
       "sudo chmod 644 /etc/rancher/k3s/k3s.yaml",
