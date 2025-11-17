@@ -27,10 +27,7 @@ resource "aws_instance" "myec2_tf" {
   key_name = var.key_name
   vpc_security_group_ids = [var.vpc_security_group_id]
 
-  # user_data = file("./init_script.sh")
-  user_data = templatefile("./init_script.sh", {
-  public_ip = self.public_ip
-  })
+  user_data = file("./init_script.sh")
 
   tags = {
     Name = "terraform_ec2"
