@@ -8,13 +8,13 @@ sudo yum install git -y
 
 sudo swapoff -a
 sudo sed -i '/swap/d' /etc/fstab
-# curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="v1.28.6+k3s1" sh -
+curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="v1.28.6+k3s1" sh -
 
 
-curl -sfL https://get.k3s.io | \
-  INSTALL_K3S_VERSION="v1.28.6+k3s1" \
-  INSTALL_K3S_EXEC="--disable=traefik --tls-san ${private_ip}" \
-  sh -
+# curl -sfL https://get.k3s.io | \
+#   INSTALL_K3S_VERSION="v1.28.6+k3s1" \
+#   INSTALL_K3S_EXEC="--disable=traefik --tls-san ${private_ip}" \
+#   sh -
 
 # Wait until k3s service is active
 echo "Waiting for k3s service to be active..."
