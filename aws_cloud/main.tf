@@ -39,9 +39,16 @@ resource "aws_instance" "myec2_tf" {
       "echo 'Waiting for k3s to be ready...'",
       "while [ ! -f /var/run/k3s-ready ]; do sleep 5; done",
       "echo 'k3s is ready, init script complete.'",
-      "sudo mkdir -p /etc/rancher/k3s",
-      "sudo sh -c 'PUBLIC_IP=${self.public_ip}; printf \"tls-san:\\n  - %s\\n\" \"$PUBLIC_IP\" > /etc/rancher/k3s/config.yaml'",
+      # Create systemd drop-in directory
+      "sudo mkdir -p /etc/systemd/system/k3s.service.d",
+
+      # Update ExecStart to include only --tls-san
+      "sudo sh -c 'cat > /etc/systemd/system/k3s.service.d/override.conf <<EOF\n[Service]\nExecStart=\nExecStart=/usr/local/bin/k3s server --tls-san ${self.public_ip}\nEOF'",
+
+      # Reload systemd and restart k3s
+      "sudo systemctl daemon-reload",
       "sudo systemctl restart k3s",
+      "sudo systemctl status k3s --no-pager",
       "echo 'k3s is ready, tls-san is updated with ec2 public ip.'"
     ]
 
