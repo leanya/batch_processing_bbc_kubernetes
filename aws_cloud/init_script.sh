@@ -6,7 +6,7 @@ sudo yum install git -y
 
 sudo swapoff -a
 sudo sed -i '/swap/d' /etc/fstab
-curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="v1.28.6+k3s1" INSTALL_K3S_EXEC="--disable=traefik" sh -
+curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION="v1.28.6+k3s1" sh -
 
 # curl -sfL https://get.k3s.io | \
 #   INSTALL_K3S_VERSION="v1.28.6+k3s1" \
@@ -26,7 +26,7 @@ for i in {1..30}; do
 done
 
 
-update kubeconfig permissions
+# update kubeconfig permissions
 sudo chmod 644 /etc/rancher/k3s/k3s.yaml
 sudo chown ec2-user:ec2-user /etc/rancher/k3s/k3s.yaml
 
