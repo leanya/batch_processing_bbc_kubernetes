@@ -3,6 +3,8 @@ set -ex
 
 sudo yum update -y
 sudo yum install git -y
+sudo yum install -y iptables iptables-services
+sudo yum install -y ip6tables-services
 
 # sudo swapoff -a
 # sudo sed -i '/swap/d' /etc/fstab
