@@ -12,11 +12,9 @@ sudo sed -i '/swap/d' /etc/fstab
 
 # Fetch EC2 public IP dynamically
 # http://169.254.169.254 is the AWS EC2 Instance Metadata Service (IMDS)
-PUBLIC_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)
-curl -sfL https://get.k3s.io | \
-  INSTALL_K3S_VERSION="v1.28.6+k3s1" \
-  INSTALL_K3S_EXEC="--disable=traefik --tls-san ${PUBLIC_IP}" \
-  sh -s -
+export INSTALL_K3S_VERSION="v1.28.6+k3s1"
+export INSTALL_K3S_EXEC="--disable=traefik --tls-san ${PUBLIC_IP}"
+curl -sfL https://get.k3s.io | sh -
 
 # Wait until k3s service is active
 echo "Waiting for k3s service to be active..."
