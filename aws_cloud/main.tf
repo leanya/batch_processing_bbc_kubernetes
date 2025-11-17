@@ -43,7 +43,6 @@ resource "aws_instance" "myec2_tf" {
       "sudo sh -c 'PUBLIC_IP=${self.public_ip}; printf \"tls-san:\\n  - %s\\n\" \"$PUBLIC_IP\" > /etc/rancher/k3s/config.yaml'",
       "sudo systemctl restart k3s",
       "sudo systemctl status k3s",
-      "while ! sudo systemctl is-active --quiet k3s; do sleep 5; done",
       "echo 'k3s is ready, tls-san is updated with ec2 public ip.'",
     ]
 
