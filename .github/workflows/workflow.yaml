@@ -22,7 +22,7 @@ permissions:
 
 jobs:
   terraform:
-    # if: false
+    if: false
     name: 'Terraform'
     runs-on: ubuntu-latest
     outputs:
@@ -139,14 +139,14 @@ jobs:
     name: 'Deploy to EC2 k3s'
     runs-on: ubuntu-latest
     # needs: [terraform, helm]
-    needs: terraform
+    # needs: terraform
     env:
       REGISTRY: ghcr.io
       OWNER: ${{ github.repository_owner }}
       CHART_NAME: bbc-news-app
       SSH_PRIVATE_KEY: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
-      EC2_IP: ${{ needs.terraform.outputs.instance_public_dns }}
-      # EC2_IP: ${{ github.event.inputs.ec2_ip }} 
+      # EC2_IP: ${{ needs.terraform.outputs.instance_public_dns }}
+      EC2_IP: ${{ github.event.inputs.ec2_ip }} 
 
     steps:
     - name: Checkout repo
@@ -201,8 +201,10 @@ jobs:
         which helm
         ls -l $(which helm)
         helm version
+        kubectl --kubeconfig=k3s.yaml proxy & 
         helm upgrade --install bbc-deploy \
         oci://$REGISTRY/$OWNER/bbc-app-charts/$CHART_NAME \
+        --version 0.1.0 \
         --kubeconfig=$(pwd)/k3s.yaml \
-        --insecure-skip-tls-verify \
-        --version 0.1.0
+        --insecure-skip-tls-verify
+        
