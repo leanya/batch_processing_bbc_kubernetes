@@ -206,5 +206,6 @@ jobs:
         oci://$REGISTRY/$OWNER/bbc-app-charts/$CHART_NAME \
         --version 0.1.0 \
         --kubeconfig=$(pwd)/k3s.yaml \
+        --kube-apiserver=127.0.0.1:8001 \
         --insecure-skip-tls-verify
         
