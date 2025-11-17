@@ -33,9 +33,16 @@ resource "aws_instance" "myec2_tf" {
     Name = "terraform_ec2"
   }
 
-  # provisioner to wait for k3s in the init-script
+  # provisioner to install and wait for k3s in the init-script
   provisioner "remote-exec" {
     inline = [
+      "sudo swapoff -a",
+      "sudo sed -i '/swap/d' /etc/fstab",
+      "PUBLIC_IP=$(curl -s http://169.254.169.254/latest/meta-data/public-ipv4)",
+      "curl -sfL https://get.k3s.io | INSTALL_K3S_VERSION='v1.28.6+k3s1' INSTALL_K3S_EXEC='--disable=traefik --tls-san $PUBLIC_IP' sh -",
+      "sudo chmod 644 /etc/rancher/k3s/k3s.yaml",
+      "sudo chown ec2-user:ec2-user /etc/rancher/k3s/k3s.yaml",
+      "touch /var/run/k3s-ready",
       "echo 'Waiting for k3s to be ready...'",
       "while [ ! -f /var/run/k3s-ready ]; do sleep 5; done",
       "echo 'k3s is ready, init script complete.'"
@@ -45,7 +52,7 @@ resource "aws_instance" "myec2_tf" {
       type        = "ssh"
       host        = self.public_ip
       user        = "ec2-user"
-      private_key = file("~/.ssh/id_rsa")  # can use GitHub secret
+      private_key = file("~/.ssh/id_rsa") 
     }
   }
 }
