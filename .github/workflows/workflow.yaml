@@ -202,6 +202,9 @@ jobs:
         ls -l $(which helm)
         helm version
         kubectl --kubeconfig=k3s.yaml proxy & 
+        while ! nc -z 127.0.0.1 8001; do
+          sleep 1
+        done
         helm upgrade --install bbc-deploy \
         oci://$REGISTRY/$OWNER/bbc-app-charts/$CHART_NAME \
         --version 0.1.0 \
