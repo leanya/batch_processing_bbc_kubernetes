@@ -22,7 +22,7 @@ permissions:
 
 jobs:
   terraform:
-    if: false
+    # if: false
     name: 'Terraform'
     runs-on: ubuntu-latest
     outputs:
@@ -145,8 +145,8 @@ jobs:
       OWNER: ${{ github.repository_owner }}
       CHART_NAME: bbc-news-app
       SSH_PRIVATE_KEY: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
-      # EC2_IP: ${{ needs.terraform.outputs.instance_public_dns }}
-      EC2_IP: ${{ github.event.inputs.ec2_ip }} 
+      EC2_IP: ${{ needs.terraform.outputs.instance_public_dns }}
+      # EC2_IP: ${{ github.event.inputs.ec2_ip }} 
 
     steps:
     - name: Checkout repo
@@ -198,8 +198,11 @@ jobs:
     - name: Install the helm chart 
       run: |
         export HELM_EXPERIMENTAL_OCI=1
-        helm --kubeconfig=$(pwd)/k3s.yaml \
-        --insecure-skip-tls-verify \
-        upgrade --install bbc-deploy \
+        which helm
+        ls -l $(which helm)
+        helm version
+        helm upgrade --install bbc-deploy \
         oci://$REGISTRY/$OWNER/bbc-app-charts/$CHART_NAME \
+        --kubeconfig=$(pwd)/k3s.yaml \
+        --insecure-skip-tls-verify \
         --version 0.1.0
