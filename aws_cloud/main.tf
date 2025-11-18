@@ -37,9 +37,9 @@ resource "aws_instance" "myec2_tf" {
   provisioner "remote-exec" {
     inline = [
       "echo 'Waiting for k3s to be ready...'",
-      "while ! sudo k3s kubectl get nodes 2>/dev/null | grep -q ' Ready '; do sleep 5; done",
-      "while [ ! -f /var/run/k3s-ready ]; do sleep 5; done",
-      "sleep 60",
+      "while ! sudo k3s kubectl get nodes 2>/dev/null | grep -q ' Ready '; do sleep 10; done",
+      "while [ ! -f /var/run/k3s-ready ]; do sleep 10; done",
+      "sleep 30",
       "echo 'k3s is ready, init script complete.'",
       # "managing K3s via the config file
       "sudo mkdir -p /etc/rancher/k3s",
@@ -47,8 +47,8 @@ resource "aws_instance" "myec2_tf" {
       # Restart k3s
       "sudo systemctl restart k3s",
       "sudo systemctl status k3s --no-pager",
-      "while ! sudo k3s kubectl get nodes 2>/dev/null | grep -q ' Ready '; do sleep 5; done",
-      "sleep 60",
+      "while ! sudo k3s kubectl get nodes 2>/dev/null | grep -q ' Ready '; do sleep 10; done",
+      "sleep 30",
       "echo 'k3s is ready, tls-san is updated with ec2 public ip.'"
     ]
 
