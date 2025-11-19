@@ -33,19 +33,30 @@ resource "aws_instance" "myec2_tf" {
     Name = "terraform_ec2"
   }
 
-  # provisioner to wait for k3s in the init-script
+  # provisioner to include ec2 public ip to tls-san for k3s
   provisioner "remote-exec" {
     inline = [
       "echo 'Waiting for k3s to be ready...'",
+      "while ! sudo k3s kubectl get nodes 2>/dev/null | grep -q ' Ready '; do sleep 5; done",
       "while [ ! -f /var/run/k3s-ready ]; do sleep 5; done",
-      "echo 'k3s is ready, init script complete.'"
+      "sleep 60",
+      "echo 'k3s is ready, init script complete.'",
+      # "managing K3s via the config file
+      "sudo mkdir -p /etc/rancher/k3s",
+      "sudo sh -c 'PUBLIC_IP=${self.public_ip}; printf \"tls-san:\\n  - %s\\n\" \"$PUBLIC_IP\" > /etc/rancher/k3s/config.yaml'",
+      # Restart k3s
+      "sudo systemctl restart k3s",
+      "sudo systemctl status k3s --no-pager",
+      "while ! sudo k3s kubectl get nodes 2>/dev/null | grep -q ' Ready '; do sleep 5; done",
+      "sleep 60",
+      "echo 'k3s is ready, tls-san is updated with ec2 public ip.'"
     ]
 
     connection {
       type        = "ssh"
       host        = self.public_ip
       user        = "ec2-user"
-      private_key = file("~/.ssh/id_rsa")  # can use GitHub secret
+      private_key = file("~/.ssh/id_rsa") 
     }
   }
 }

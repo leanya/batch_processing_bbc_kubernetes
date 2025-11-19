@@ -4,7 +4,7 @@ backend:
   repository: "lean24/bbc_backend"
   tag: "kubernetes"
   pullPolicy: Always
-  schedule: "*/8 * * * *"
+  schedule: "0 0 * * *"
 
 frontend:
   repository: "lean24/bbc_frontend"
