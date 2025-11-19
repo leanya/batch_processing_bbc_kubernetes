@@ -1,20 +1,20 @@
 name: 'deployment_pipeline'
-# on:
-#   push:
-#     branches:
-#       - main
-#     paths-ignore:
-#       - 'README.md'
 on:
-  workflow_dispatch:
-    inputs:
-      ec2_ip:
-        description: 'EC2 public IP for testing'
-        required: true
-      debug:
-        description: 'Enable tmate session for debugging'
-        required: false
-        default: 'false'
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'README.md'
+# on:
+#   workflow_dispatch:
+#     inputs:
+#       ec2_ip:
+#         description: 'EC2 public IP for testing'
+#         required: true
+#       debug:
+#         description: 'Enable tmate session for debugging'
+#         required: false
+#         default: 'false'
 
 permissions:
   contents: read
@@ -78,7 +78,7 @@ jobs:
       working-directory: ./aws_cloud
 
   docker:
-    if: false 
+    # if: false 
     name: 'Docker'
     runs-on: ubuntu-latest
     env:
@@ -108,7 +108,7 @@ jobs:
           lean24/bbc_${{ matrix.service }}:kubernetes
 
   helm: 
-    if: false
+    # if: false
     name: 'Helm'
     runs-on: ubuntu-latest
     needs: docker
@@ -138,8 +138,8 @@ jobs:
   deployment:
     name: 'Deploy to EC2 k3s'
     runs-on: ubuntu-latest
-    # needs: [terraform, helm]
-    needs: terraform
+    needs: [terraform, helm]
+    # needs: terraform
     env:
       REGISTRY: ghcr.io
       OWNER: ${{ github.repository_owner }}
@@ -170,7 +170,7 @@ jobs:
         scp -o StrictHostKeyChecking=no ec2-user@$EC2_IP:/etc/rancher/k3s/k3s.yaml ./k3s.yaml
         sed -i "s/127.0.0.1/$EC2_IP/" ./k3s.yaml
     
-    - name: Check the kubeconfig in runner
+    - name: Check the kubeconfig in runner and debug helm binary
       run: | 
         ls -l ./k3s.yaml
         cat ./k3s.yaml | head -n 10
@@ -178,16 +178,12 @@ jobs:
         cat $KUBECONFIG | head -n 5
         kubectl --kubeconfig=$(pwd)/k3s.yaml --insecure-skip-tls-verify get nodes -v=8
         curl -vk https://$EC2_IP:6443
-
-    - name: Debug helm binary
-      run: |
         which helm
         helm version
         ls -l $(which helm)
 
     - name: Helm login to GitHub Container Registry
       run: |
-        helm version 
         echo ${{ secrets.GITHUB_TOKEN }} | helm registry login $REGISTRY -u $OWNER --password-stdin
 
     - name: Install the helm chart 
@@ -196,5 +192,6 @@ jobs:
         oci://$REGISTRY/$OWNER/bbc-app-charts/$CHART_NAME \
         --version 0.1.0 \
         --kubeconfig=$(pwd)/k3s.yaml \
-        --insecure-skip-tls-verify
+        --insecure-skip-tls-verify \
+        --wait
         
